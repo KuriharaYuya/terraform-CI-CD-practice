@@ -1,4 +1,13 @@
-# tete
+terraform {
+  cloud {
+    organization = "kurihara-yuya"
+
+    workspaces {
+      name = "terraform-CI-CD-practice"
+    }
+  }
+}
+
 provider "aws" {
   region = "ap-northeast-1"
 }
