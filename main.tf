@@ -1,3 +1,4 @@
+# 
 terraform {
   cloud {
     organization = "kurihara-yuya"
