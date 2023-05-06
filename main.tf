@@ -9,3 +9,12 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames             = true
   assign_generated_ipv6_cidr_block = false
 }
+
+terraform {
+  backend "remote" {
+    organization = "<your_organization>"
+    workspaces {
+      name = "<your_workspace>"
+    }
+  }
+}
