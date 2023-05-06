@@ -12,9 +12,9 @@ resource "aws_vpc" "vpc" {
 
 terraform {
   backend "remote" {
-    organization = "<your_organization>"
+    organization = "kurihara-yuya"
     workspaces {
-      name = "<your_workspace>"
+      name = "terraform-CI-CD-practice"
     }
   }
 }
