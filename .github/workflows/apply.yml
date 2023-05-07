@@ -31,11 +31,8 @@ jobs:
           script: |
             const prUrl = '${{ github.event.inputs.pr_url }}';
             const [_, owner, repo, , prNumber] = prUrl.split('/').slice(-5);
-            const output = `<details><summary>Show Plan</summary>
-            \`\`\`\n
+            const output = `<details><summary>Show Apply result</summary>
             ${{ steps.apply.outputs.stdout }}
-            \`\`\`
-
             </details>
 
             *Dispatched by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
