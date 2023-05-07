@@ -16,13 +16,9 @@ jobs:
         run: terraform init
       - name: Apply Terraform
         id: apply
-        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
         run: |
           terraform apply -auto-approve
-          terraform show
-          echo "::set-output name=terraform_output::$(terraform output -json)"
-          terraform output -json | jq '.' > terraform_output.json
-          echo "Terraform apply is done"
+        continue-on-error: true
       - name: Comment output to PR
         uses: actions/github-script@v6
         with:
