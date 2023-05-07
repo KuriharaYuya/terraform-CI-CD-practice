@@ -1,6 +1,11 @@
 name: Terraform Apply on dispatch
 
-on: [workflow_dispatch]
+on: 
+  workflow_dispatch:
+    inputs:
+          pr_url:
+            description: 'Pull request URL'
+            required: true
 
 jobs:
   terraform:
@@ -24,6 +29,8 @@ jobs:
         with:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           script: |
+            const prUrl = ${{ github.event_name == 'workflow_dispatch' ? github.event.inputs.pr_url : github.event.pull_request.html_url }};
+            const [_, owner, repo, , prNumber] = prUrl.split('/').slice(-5);
             const output = `<details><summary>Show Plan</summary>
             \`\`\`\n
             ${{ steps.apply.outputs.stdout }}
@@ -31,11 +38,11 @@ jobs:
 
             </details>
 
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            *Dispatched by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
 
             github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              issue_number: prNumber,
+              owner: owner,
+              repo: repo,
               body: output
-            })
+            });
