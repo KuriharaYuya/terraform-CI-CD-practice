@@ -9,7 +9,7 @@ jobs:
       - name: Check if all checks passed
         uses: arup-group/action-all-checks-passed@master
         env:
-          GITHUB_TOKEN:${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Set up Terraform
