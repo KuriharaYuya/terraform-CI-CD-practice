@@ -1,39 +1,15 @@
 name: Terraform Apply
 
-on:
-  pull_request:
-    types: [opened, synchronize]
+on: workflow_dispatch
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
       - name: Check if all checks passed
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
-        with:
-          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          script: |
-            const pr = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-            });
-            const statuses = await github.repos.listCommitStatusesForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: pr.data.head.sha,
-            });
-            const allPassed = statuses.data.every((status) => status.state === 'success');
-            if (!allPassed) {
-              github.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: 'Not all checks have passed. Please make sure all checks pass before applying Terraform.',
-              });
-              process.exit(1);
-            }
+        uses: arup-group/action-all-checks-passed@master
+        env:
+          GITHUB_TOKEN:${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Set up Terraform
