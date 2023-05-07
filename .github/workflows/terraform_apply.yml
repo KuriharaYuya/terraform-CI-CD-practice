@@ -1,0 +1,74 @@
+name: Terraform Apply
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if all checks passed
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+        with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            const pr = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const statuses = await github.repos.listCommitStatusesForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.data.head.sha,
+            });
+            const allPassed = statuses.data.every((status) => status.state === 'success');
+            if (!allPassed) {
+              github.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Not all checks have passed. Please make sure all checks pass before applying Terraform.',
+              });
+              process.exit(1);
+            }
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Terraform Init
+        run: terraform init
+      - name: Apply Terraform
+        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+        run: |
+          terraform apply -auto-approve
+          terraform show
+          echo "::set-output name=terraform_output::$(terraform output -json)"
+          terraform output -json | jq '.' > terraform_output.json
+          echo "Terraform apply is done"
+      - name: Comment output to PR
+        uses: actions/github-script@v6
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            const output = `<details><summary>Show Plan</summary>
+            \`\`\`\n
+            ${{ steps.print_output.outputs.terraform_output }}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
